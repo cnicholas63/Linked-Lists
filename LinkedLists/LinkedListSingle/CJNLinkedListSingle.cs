@@ -5,21 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 
 /*
- * Simple Double linked list class
+ * Simple Single linked list class
  */
 
-namespace CJNLinkedListDouble
+namespace CJNLinkedLists
 {
-    class Node // A Node holds the data for one item plus forward and backward references
+    class Node // A Node holds the data for one item plus forward references
     {
         public object item;
-        public Node previous; // Point to previous record
         public Node next; // Point to next record
 
         public Node() // Node constructor
         {
             item = null;
-            previous = null;
             next = null; 
         }
     }
@@ -30,14 +28,13 @@ namespace CJNLinkedListDouble
         public int listSize; // Number of elements in the list
     }
 
-    class CJNLinkedList<BaseType> // Linked list of type BaseType using generics
+    class CJNLinkedListSingle<BaseType> // Linked list of type BaseType using generics
     {
         private Header head; // List information and pointer to first element on in list (head of list)
         private Node next; // Pointer to next item
-        private Node prev; // Pounter to previous item
 
         // Construct empty linked list of type BaseType
-        public CJNLinkedList() 
+        public CJNLinkedListSingle() 
         {
             head = new Header(); // Create header record
             head.firstNode = null;  // No record to point to as yet
@@ -61,13 +58,8 @@ namespace CJNLinkedListDouble
             
             if (temp == null) // If the head is not pointing at a node (empty list) add first node and update head
             {
-                node.previous = null;   // As this is first record, no previous
-                node.next = null;       // As this is first record, no next (yet)
-
-                head.firstNode = node; // Point the head at this first record
-
-                // Console.WriteLine("Head of list added, List size = " + head.listSize + " Object: "+ obj); // Debug printout
-
+                node.next = null;           // As this is first record, no next (yet)
+                head.firstNode = node;      // Point the head at this first record
                 return (BaseType)node.item; // Head object populated, return
             } 
              
@@ -75,16 +67,11 @@ namespace CJNLinkedListDouble
             while (temp.next != null) // Iterate through nodes until at the end
             {
                 temp = temp.next; // Move to next node
-            }
-
+            }   
             // temp now points at last node in list
-            node.previous = temp;   // Point to previous node (temp)
-
+            
             node.next = null;       // Mark as the end of the list
-
             temp.next = node;       // Point old end of list at new end of list
-
-            // Console.WriteLine("New node added, List size = " + head.listSize + " Object: " + obj); // Debug Printout
 
             return obj;             // Return the object
         }
@@ -129,10 +116,8 @@ namespace CJNLinkedListDouble
                 temp = head.firstNode; // Point temp at old head record
 
                 head.firstNode = node; // point head at new record
-                node.previous = null; // No previous record for the head
                 node.next = temp;
                 
-                temp.previous = node;
                 return true;
             }
 
@@ -142,13 +127,9 @@ namespace CJNLinkedListDouble
             }
 
             // Adjust pointers to insert new record into list
-            node.previous = temp; // Point at previous node
             node.next = temp.next; // point at next node
             temp.next = node; // update previous record to point here
 
-            if(node.next != null) // If this is not a new last record in list
-                node.next.previous = node; // point next record's previous pointer here
-            
             return true;
         }
 
@@ -157,46 +138,42 @@ namespace CJNLinkedListDouble
         public Boolean deleteRecord(int index)
         {
             Node temp = head.firstNode; // Point temp at head
+            Node toDelete = null; // Node to be deleted
             int count = 0; // Counter to calculate the correct element
 
-            if (index < 0 || index >= head.listSize) // Index out of bounds
+            if (head.listSize == 0 || index < 0 || index >= head.listSize) // Index out of bounds
             {
                 throw new IndexOutOfRangeException(); // Throw index out of range exception
             }
 
-            while (count++ < index) // Iterate through the nodes to locate required node
+            head.listSize--; // Decrement the list size      
+
+            while (count++ < index-1) // Iterate through the nodes to the node before the one to be deleted
             {
                 temp = temp.next; 
             }
-            // temp now points at the node to be deleted
-
-            // Console.WriteLine("Node chosen for deletion = " + temp.item); // Debug printout
+            // temp now points at the node before the one to be deleted
 
             // Updte previous node links and head
-            if (temp.previous != null) // If there is a previous node
-            {
-                temp.previous.next = temp.next; // Point the previous node's next at the next node (skipping this node - unlink left to right)
-            }
-            else // No previous node, this must be the first so update it
+            if(head.firstNode == temp) // The record to be deleted is the first record
             {
                 head.firstNode = temp.next; // Point head.firstNode at the next record (this may be null if there are no more items in list)
-                temp.previous = null; // Unlink this node's previous pointer
+                toDelete = temp; // Point at record to be deleted
+            }
+            else // Not the first record
+            { 
+                toDelete = temp.next; // Point at node to be deleted
+
+                temp.next = toDelete.next; // Skip toDelete and point at it's next node reference
             }
 
-            // Update next node links
-            if (temp.next != null) // if there is a next node
-            {
-                // Console.WriteLine("Updating next reference "); // Debug Printout
-                temp.next.previous = temp.previous; // Point the next record.previous at previous (skipping this node - unlink right to left)
-                temp.next = null; // Unlink this node's next pointer
-            }
-
-            head.listSize--; // Decrement the list size
+            toDelete.next = null; // Unlink this node's next pointer
+            toDelete.item = null; // Unlink pointer to nodes data, the node temp is pointing to should now have no references to it and no references to data GC can remove it
 
             return true; // Node deleted successfully
         }
 
-        // Displaye the list to the console - testing purposes
+        // Display the list to the console - testing purposes
         public void displayList() 
         {
             Node temp = head.firstNode;
